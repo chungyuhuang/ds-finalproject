@@ -1,0 +1,144 @@
+---
+title: "DS_FinalProject"
+author: "peteryu"
+date: "2018/1/8"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('scales')
+library('dplyr') 
+library('randomForest') 
+library('methods')
+library('argparser')
+library('caret')
+library('Hmisc')
+library('e1071')
+library('corrplot')
+```
+
+## Occupancy detection using UCI ML repository dataset.
+
+This is the final project from Data Science class @ NCCU CS.
+
+Our target is to find out if the office is availabel for use from this dataset.
+
+### Data loading
+
+First, load dataset from './occupancy_data'.
+
+```{r data loading}
+train <- read.csv('./occupancy_data/train.csv', stringsAsFactors = F)
+test1 <- read.csv('./occupancy_data/test1.csv', stringsAsFactors = F)
+test2 <- read.csv('./occupancy_data/test2.csv', stringsAsFactors = F)
+```
+
+In training data, there are total 8144 rows. 
+
+In testing data, there are 12416 rows.
+
+Here only shows a few rows from those data.
+
+There are seven attributes collecting from sensor inside the office.
+
+No missing data is this dataset.
+
+```{r train}
+head(train)
+```
+```{r test}
+head(test1)
+```
+
+###Data preprocessing
+
+Now, we need to do some data preprocessing. 
+
+Combine training and testing data.
+Since 'Date' is time serial, we want some categorical attributes, so convert it into Weekdays and Time.
+
+```{r preprocessing}
+full <- bind_rows(train, test1, test2)
+full$Weekdays <- sapply(full$Date, function(x) if(weekdays(as.Date(strsplit(x, " ")[[1]][1])) == '週六' || weekdays(as.Date(strsplit(x, " ")[[1]][1])) == '週日') 'weekend' else 'weekday')
+full$Time <- sapply(full$Date, function(x) if(strsplit(x, " ")[[1]][2] < '12:00' && strsplit(x, " ")[[1]][2] > '00:00') 'morning' else if(strsplit(x, " ")[[1]][2] > '18:00') 'evening' else 'afternoon')
+
+head(full)
+```
+
+Preprocessing is done, split dataset into training and testing data.
+
+We don't need 'Date' attribute for model construction, so here we use dataset from column index 2.
+
+```{r split data}
+train <- full[1:8144, 2:9]
+test <- full[8145:20560, 2:9]
+```
+
+For further model comparsion, we generate two list with all prediction of zero(vacant), and one(occupy).
+
+```{r null model, echo=FALSE}
+null_list <- c()
+one_list <- c()
+
+for(i in c(1:12416)){
+  null_list <- c(null_list, 0)
+  one_list <- c(one_list, 1)
+}
+
+head(null_list)
+
+head(one_list)
+```
+
+Summary about training and testing data.
+
+```{r summary}
+train$Occupancy <- as.factor(train$Occupancy)
+test$Occupancy  <- as.factor(test$Occupancy)
+
+summary(train)
+
+summary(test)
+```
+
+Plotting the correlation about attribute of training data.
+
+```{r corr, echo=FALSE}
+correlation_result<-rcorr(as.matrix(train[2:6]))
+corrplot(correlation_result$r,type="upper", order="hclust", tl.col="black", tl.srt=45)
+```
+
+###Model Construction
+
+Constructing our supervised learning model using random forest classifcation algorithm.
+
+Underneath shows each attribute importance during decision tree classifier constructing.
+
+```{r rf}
+set.seed(1234)
+model_all <- train(Occupancy~.,method="rf",data=train)
+plot(varImp(model_all,scale=TRUE))
+```
+
+Finally, the accuracy of this model compare two null model.
+
+```{r acc, echo=FALSE}
+rf_acc <- sum(test$Occupancy==predict(model_all,test))/dim(test)[1]*100
+zero_acc <- sum(test$Occupancy==null_list)/dim(test)[1]*100
+one_acc <- sum(test$Occupancy==one_list)/dim(test)[1]*100
+  
+m <- c("Random Forest", "null model-0", "null model-1")
+acc <- c(rf_acc, zero_acc, one_acc)
+acc_table <- data.frame(Model=m,
+                        Accuracy=acc,
+                        stringsAsFactors = F)
+acc_table
+```
+
+The confusion matrix.
+
+```{r cm, echo=FALSE}
+set.seed(1234)
+confusionMatrix(test$Occupancy,predict(model_all,test))
+```
