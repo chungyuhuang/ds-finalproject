@@ -121,7 +121,7 @@ model_all <- train(Occupancy~.,method="rf",data=train)
 plot(varImp(model_all,scale=TRUE))
 ```
 
-Finally, the accuracy of this model compare two null model.
+Finally, the accuracy of this model compare to null model.
 
 ```{r acc, echo=FALSE}
 rf_acc <- sum(test$Occupancy==predict(model_all,test))/dim(test)[1]*100

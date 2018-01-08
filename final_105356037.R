@@ -8,22 +8,7 @@ library('Hmisc')
 library('e1071')
 
 model_all <- function(){
-  set.seed(1234)
-  model_all <- train(Occupancy~.,method="rf",data=train)
-  model_all
-  plot(model_all)
-  # model_all$finalModel
-  # varImp(model_all)
-  plot(varImp(model_all,scale=TRUE))
   
-  print(sum(test$Occupancy==predict(model_all,test))/dim(test)[1]*100)
-  set.seed(1234)
-  print(confusionMatrix(test$Occupancy,predict(model_all,test)))
-  
-  print(sum(test$Occupancy==null_list)/dim(test)[1]*100)
-  print(sum(test$Occupancy==one_list)/dim(test)[1]*100)
-  # set.seed(1234)
-  # confusionMatrix(test$Occupancy,null_list)
 }
 
 model_without_light <- function(){
@@ -31,29 +16,29 @@ model_without_light <- function(){
   set.seed(1234)
   model_no_light <- train(Occupancy~.-Light,method="rf",data=train)
   model_no_light
-  plot(modelL_no_light)
+  plot(model_no_light)
   #model_no_light$finalModel
   #varImp(model_no_light)
   plot(varImp(model_no_light,scale=TRUE))
   
-  sum(test$Occupancy==predict(model_no_light,test))/dim(test)[1]*100
+  print(sum(test$Occupancy==predict(model_no_light,test))/dim(test)[1]*100)
   set.seed(1234)
-  confusionMatrix(test$Occupancy,predict(model_no_light,test))
+  print(confusionMatrix(test$Occupancy,predict(model_no_light,test)))
 }
 
 model_without_CO2 <- function(){
   #without CO2
   set.seed(1234)
-  model_no_CO2 <- train(Occupancy~.-CO2,method="rf",data=train)
+  model_no_CO2 <- train(Occupancy~.-CO2-Temperature-Humidity-HumidityRatio-Weekdays-Time,method="rf",data=train)
   model_no_CO2
-  plot(modelL_no_CO2)
+  #plot(model_no_CO2)
   #model_no_CO2$finalModel
   #varImp(model_no_CO2)
-  plot(varImp(model_no_CO2,scale=TRUE))
+  #plot(varImp(model_no_CO2,scale=TRUE))
   
-  sum(test$Occupancy==predict(model_no_CO2,test))/dim(test)[1]*100
+  print(sum(test$Occupancy==predict(model_no_CO2,test))/dim(test)[1]*100)
   set.seed(1234)
-  confusionMatrix(test$Occupancy,predict(model_no_CO2,test))
+  print(confusionMatrix(test$Occupancy,predict(model_no_CO2,test)))
 }
 
 p <- arg_parser("")
@@ -108,10 +93,16 @@ correlation_result<-rcorr(as.matrix(train[2:6]))
 
 print('=> Model Constructing ...')
 
-if(nlight){
-  model <- model_without_CO2()
-}else if(nco2){
-  model <- model_without_CO2()
-}else{
-  model <- model_all()
-}
+set.seed(1234)
+model_all <- train(Occupancy~.,method="rf",data=train)
+plot(model_all)
+# model_all$finalModel
+# varImp(model_all)
+plot(varImp(model_all,scale=TRUE))
+
+sum(test$Occupancy==predict(model_all,test))/dim(test)[1]*100
+set.seed(1234)
+confusionMatrix(test$Occupancy,predict(model_all,test))
+
+sum(test$Occupancy==null_list)/dim(test)[1]*100
+sum(test$Occupancy==one_list)/dim(test)[1]*100
