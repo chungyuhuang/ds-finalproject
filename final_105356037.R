@@ -7,40 +7,6 @@ library('caret')
 library('Hmisc')
 library('e1071')
 
-model_all <- function(){
-  
-}
-
-model_without_light <- function(){
-  #without Light
-  set.seed(1234)
-  model_no_light <- train(Occupancy~.-Light,method="rf",data=train)
-  model_no_light
-  plot(model_no_light)
-  #model_no_light$finalModel
-  #varImp(model_no_light)
-  plot(varImp(model_no_light,scale=TRUE))
-  
-  print(sum(test$Occupancy==predict(model_no_light,test))/dim(test)[1]*100)
-  set.seed(1234)
-  print(confusionMatrix(test$Occupancy,predict(model_no_light,test)))
-}
-
-model_without_CO2 <- function(){
-  #without CO2
-  set.seed(1234)
-  model_no_CO2 <- train(Occupancy~.-CO2-Temperature-Humidity-HumidityRatio-Weekdays-Time,method="rf",data=train)
-  model_no_CO2
-  #plot(model_no_CO2)
-  #model_no_CO2$finalModel
-  #varImp(model_no_CO2)
-  #plot(varImp(model_no_CO2,scale=TRUE))
-  
-  print(sum(test$Occupancy==predict(model_no_CO2,test))/dim(test)[1]*100)
-  set.seed(1234)
-  print(confusionMatrix(test$Occupancy,predict(model_no_CO2,test)))
-}
-
 p <- arg_parser("")
 p <- add_argument(p, "-nco2", help="model without CO2", flag = TRUE)
 p <- add_argument(p, "-nlight", help="modle without Light", flag = TRUE)
@@ -81,7 +47,7 @@ for(i in c(1:12416)){
 train$Occupancy <- as.factor(train$Occupancy)
 test$Occupancy  <- as.factor(test$Occupancy)
 
-print(prop.table(table(train$Occupancy)))
+#print(prop.table(table(train$Occupancy)))
 summary(train)
 
 correlation_result<-rcorr(as.matrix(train[2:6]))
@@ -95,10 +61,10 @@ print('=> Model Constructing ...')
 
 set.seed(1234)
 model_all <- train(Occupancy~.,method="rf",data=train)
-plot(model_all)
+#plot(model_all)
 # model_all$finalModel
 # varImp(model_all)
-plot(varImp(model_all,scale=TRUE))
+#plot(varImp(model_all,scale=TRUE))
 
 sum(test$Occupancy==predict(model_all,test))/dim(test)[1]*100
 set.seed(1234)
