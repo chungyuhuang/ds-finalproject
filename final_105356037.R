@@ -34,12 +34,12 @@ full$Time <- sapply(full$Date, function(x) if(strsplit(x, " ")[[1]][2] < '12:00'
                     else if(strsplit(x, " ")[[1]][2] > '18:00') 'evening' else 'afternoon')
 
 print(head(full))
-train <- full[1:8144, 2:9]
-test <- full[8145:20560, 2:9]
+train <- full[1:15000, 2:9]
+test <- full[15001:20560, 2:9]
 
 null_list <- c()
 one_list <- c()
-for(i in c(1:12416)){
+for(i in c(1:5560)){
   null_list <- c(null_list, 0)
   one_list <- c(one_list, 1)
 }
